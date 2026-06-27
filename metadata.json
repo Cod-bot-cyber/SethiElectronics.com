@@ -1,0 +1,6 @@
+{
+  "name": "Sethi Electronics",
+  "description": "Complete production-ready electronics e-commerce website with product showcase, real-time search, customized UPI payment, admin dashboard, order tracking, and reviews.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

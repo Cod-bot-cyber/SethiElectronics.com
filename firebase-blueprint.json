@@ -1,0 +1,166 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with login credentials, addresses, and status.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "mobile": { "type": "string" },
+        "passwordHash": { "type": "string" },
+        "addresses": { "type": "array" },
+        "isAdmin": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "mobile", "passwordHash"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Electronic product available in the store.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "brand": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "discount": { "type": "number" },
+        "description": { "type": "string" },
+        "specifications": { "type": "object" },
+        "features": { "type": "array" },
+        "warranty": { "type": "string" },
+        "stock": { "type": "number" },
+        "images": { "type": "array" },
+        "isFeatured": { "type": "boolean" },
+        "isTrending": { "type": "boolean" },
+        "isBestSeller": { "type": "boolean" },
+        "isOutOfStock": { "type": "boolean" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "brand", "category", "price"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product categories in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "image": { "type": "string" },
+        "displayOrder": { "type": "number" },
+        "enabled": { "type": "boolean" }
+      },
+      "required": ["id", "name", "image", "displayOrder", "enabled"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Order records submitted by customers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderNumber": { "type": "string" },
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "mobile": { "type": "string" },
+        "items": { "type": "array" },
+        "address": { "type": "object" },
+        "amount": { "type": "number" },
+        "paymentScreenshot": { "type": "string" },
+        "utr": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" },
+        "statusTimeline": { "type": "array" }
+      },
+      "required": ["id", "orderNumber", "userId", "customerName", "mobile", "items", "address", "amount", "utr", "status"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Verified customer product reviews.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "images": { "type": "array" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "productId", "userId", "userName", "rating", "comment", "status"]
+    },
+    "Offer": {
+      "title": "Offer",
+      "description": "Promotional offers and banner setups.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string" },
+        "code": { "type": "string" },
+        "value": { "type": "number" },
+        "expiryDate": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "enabled": { "type": "boolean" }
+      },
+      "required": ["id", "title", "type", "value", "enabled"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global website configuration, contact numbers, and payment details.",
+      "type": "object",
+      "properties": {
+        "logo": { "type": "string" },
+        "name": { "type": "string" },
+        "homepageBanners": { "type": "array" },
+        "offerBanners": { "type": "array" },
+        "storeAddress": { "type": "string" },
+        "storeTimings": { "type": "string" },
+        "contactNumbers": { "type": "array" },
+        "socialLinks": { "type": "object" },
+        "upiId": { "type": "string" },
+        "upiName": { "type": "string" },
+        "upiQrCode": { "type": "string" },
+        "paymentInstructions": { "type": "string" },
+        "transactionNote": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Store users details, passwords, and addresses."
+    },
+    "products/{productId}": {
+      "schema": "Product",
+      "description": "Store inventory products."
+    },
+    "categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Store product categories list."
+    },
+    "orders/{orderId}": {
+      "schema": "Order",
+      "description": "Store user placed orders and administrative statuses."
+    },
+    "reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Product reviews."
+    },
+    "offers/{offerId}": {
+      "schema": "Offer",
+      "description": "Store available promotional offers."
+    },
+    "settings/{settingId}": {
+      "schema": "Settings",
+      "description": "Global settings. Typically single document with ID website."
+    }
+  }
+}
