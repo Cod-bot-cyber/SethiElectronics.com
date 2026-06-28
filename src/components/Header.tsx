@@ -214,6 +214,16 @@ export default function Header() {
           {/* Right Icons: Wishlist, Cart, Profile */}
           <div className="flex items-center gap-2 sm:gap-4">
             
+            {/* Mobile Search Button */}
+            <Link 
+              to="/search" 
+              className="md:hidden p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-full transition-all"
+              aria-label="Search Products"
+              id="mobile-search-header-btn"
+            >
+              <Search className="h-5.5 w-5.5" />
+            </Link>
+
             {/* Wishlist */}
             <Link to="/profile?tab=wishlist" className="hidden sm:inline-flex relative p-2 text-gray-600 hover:text-red-500 hover:bg-red-50/50 rounded-full transition-all">
               <Heart className="h-5.5 w-5.5" />

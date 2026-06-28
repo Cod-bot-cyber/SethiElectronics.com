@@ -69,7 +69,7 @@ export default function Search() {
             onChange={(e) => handleInputChange(e.target.value)}
             className="w-full pl-12 pr-4 py-4 bg-white border border-gray-150 focus:border-blue-500 rounded-2xl font-sans text-sm focus:outline-none shadow-sm transition-colors"
           />
-          <SearchIcon className="absolute left-4.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
         </div>
       </div>
 
