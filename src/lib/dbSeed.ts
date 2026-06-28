@@ -3,17 +3,17 @@ import { db, handleFirestoreError, OperationType } from './firebase';
 import { hashPassword } from './utils';
 
 const SEED_CATEGORIES = [
-  { id: 'kitchen-appliances', name: 'Kitchen Appliances', image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&auto=format&fit=crop&q=80', displayOrder: 1, enabled: true },
-  { id: 'fans', name: 'Fans', image: 'https://images.unsplash.com/photo-1618945097723-d309be04d9a3?w=600&auto=format&fit=crop&q=80', displayOrder: 2, enabled: true },
-  { id: 'coolers', name: 'Coolers', image: 'https://images.unsplash.com/photo-1622737133809-d95047b9e673?w=600&auto=format&fit=crop&q=80', displayOrder: 3, enabled: true },
-  { id: 'mixers', name: 'Mixers', image: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?w=600&auto=format&fit=crop&q=80', displayOrder: 4, enabled: true },
-  { id: 'induction-cooktops', name: 'Induction Cooktops', image: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=600&auto=format&fit=crop&q=80', displayOrder: 5, enabled: true },
-  { id: 'electric-kettles', name: 'Electric Kettles', image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600&auto=format&fit=crop&q=80', displayOrder: 6, enabled: true },
-  { id: 'lighting', name: 'Lighting', image: 'https://images.unsplash.com/photo-1565814636199-ae8133055c1c?w=600&auto=format&fit=crop&q=80', displayOrder: 7, enabled: true },
-  { id: 'extension-boards', name: 'Extension Boards', image: 'https://images.unsplash.com/photo-1558244661-d248897f7bc4?w=600&auto=format&fit=crop&q=80', displayOrder: 8, enabled: true },
-  { id: 'geysers', name: 'Geysers', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&auto=format&fit=crop&q=80', displayOrder: 9, enabled: true },
-  { id: 'irons', name: 'Irons', image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&auto=format&fit=crop&q=80', displayOrder: 10, enabled: true },
-  { id: 'home-appliances', name: 'Home Appliances', image: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=600&auto=format&fit=crop&q=80', displayOrder: 11, enabled: true }
+  { id: 'kitchen-appliances', name: 'Kitchen Appliances', image: '', displayOrder: 1, enabled: true },
+  { id: 'fans', name: 'Fans', image: '', displayOrder: 2, enabled: true },
+  { id: 'coolers', name: 'Coolers', image: '', displayOrder: 3, enabled: true },
+  { id: 'mixers', name: 'Mixers', image: '', displayOrder: 4, enabled: true },
+  { id: 'induction-cooktops', name: 'Induction Cooktops', image: '', displayOrder: 5, enabled: true },
+  { id: 'electric-kettles', name: 'Electric Kettles', image: '', displayOrder: 6, enabled: true },
+  { id: 'lighting', name: 'Lighting', image: '', displayOrder: 7, enabled: true },
+  { id: 'extension-boards', name: 'Extension Boards', image: '', displayOrder: 8, enabled: true },
+  { id: 'geysers', name: 'Geysers', image: '', displayOrder: 9, enabled: true },
+  { id: 'irons', name: 'Irons', image: '', displayOrder: 10, enabled: true },
+  { id: 'home-appliances', name: 'Home Appliances', image: '', displayOrder: 11, enabled: true }
 ];
 
 const SEED_PRODUCTS = [

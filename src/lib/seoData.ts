@@ -22,7 +22,7 @@ export const getLocalBusinessSchema = () => ({
   '@type': 'LocalBusiness',
   '@id': `${SEO_BASE_URL}/#local-business`,
   'name': 'Sethi Electronics',
-  'image': 'https://images.unsplash.com/photo-1558317374-067fb5f30001?w=800&auto=format&fit=crop&q=80',
+  'image': `${SEO_BASE_URL}/favicon.svg`,
   'url': SEO_BASE_URL,
   'telephone': '+91-7060784706',
   'address': {
@@ -86,7 +86,7 @@ export const getProductSchema = (product: any) => ({
   '@type': 'Product',
   '@id': `${SEO_BASE_URL}/products/${product.id}#product`,
   'name': product.name,
-  'image': product.images?.[0] || 'https://images.unsplash.com/photo-1558317374-067fb5f30001?w=800&auto=format&fit=crop&q=80',
+  'image': product.images?.[0] || `${SEO_BASE_URL}/favicon.svg`,
   'description': product.description,
   'brand': {
     '@type': 'Brand',

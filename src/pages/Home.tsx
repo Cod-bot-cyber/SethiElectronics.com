@@ -17,64 +17,43 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
 
-  const defaultBanners = [
-    'https://images.unsplash.com/photo-1558317374-067fb5f30001?w=1600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1600&auto=format&fit=crop&q=80'
-  ];
-
-  const banners = websiteSettings?.homepageBanners?.length ? websiteSettings.homepageBanners : defaultBanners;
+  const banners = websiteSettings?.homepageBanners || [];
 
   // Auto scroll carousel
   useEffect(() => {
-    if (isHoveringCarousel) return;
+    if (banners.length <= 1 || isHoveringCarousel) return;
     const interval = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(interval);
   }, [banners.length, isHoveringCarousel]);
 
-  const prevSlide = () => {
-    setCurrentSlide(prev => (prev - 1 + banners.length) % banners.length);
-  };
-
-  const nextSlide = () => {
-    setCurrentSlide(prev => (prev + 1) % banners.length);
-  };
-
-  const currentSlideText = {
-    badge: websiteSettings?.carouselTexts?.[currentSlide]?.badge || 'Festival Bonanza Offer',
-    title: websiteSettings?.carouselTexts?.[currentSlide]?.title || 'Premium Electronics For Indian Homes',
-    subtitle: websiteSettings?.carouselTexts?.[currentSlide]?.subtitle || 'Get high-quality coolers, ceiling fans, instant geysers, mixers and more directly at wholesale online rates.'
-  };
+  // Handle Dynamic Navbar Color Reflection Effect
+  useEffect(() => {
+    if (banners.length === 0) return;
+    const reflectionColors = [
+      'rgba(37, 99, 235, 0.28)',   // Indigo/Blue
+      'rgba(245, 158, 11, 0.28)',  // Warm Amber
+      'rgba(168, 85, 247, 0.28)',  // Purple
+      'rgba(236, 72, 153, 0.28)',  // Vibrant Pink
+      'rgba(16, 185, 129, 0.28)',  // Mint Green
+    ];
+    const targetColor = reflectionColors[currentSlide % reflectionColors.length];
+    document.documentElement.style.setProperty('--navbar-reflection', targetColor);
+    
+    return () => {
+      document.documentElement.style.removeProperty('--navbar-reflection');
+    };
+  }, [currentSlide, banners.length]);
 
   // Filter products by states
   const featuredProducts = products.filter(p => p.isFeatured).slice(0, 4);
   const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
   const trendingProducts = products.filter(p => p.isTrending).slice(0, 4);
 
-  const popularBrands = websiteSettings?.popularBrands?.length 
-    ? websiteSettings.popularBrands 
-    : ['Bajaj', 'Havells', 'Philips', 'Pigeon', 'Usha', 'Syska'];
+  const popularBrands = websiteSettings?.popularBrands || [];
 
-  const defaultHighlights = [
-    {
-      title: 'Super Fast Dispatch',
-      description: 'We prepare, package, and ship your items within 24 hours of payment verification with full tracking.',
-      iconType: 'truck'
-    },
-    {
-      title: '100% Genuine Products',
-      description: 'Direct authorized dealership. All products are delivered brand new with original boxes and warranty cards.',
-      iconType: 'shield'
-    },
-    {
-      title: 'Modinagar Showroom Support',
-      description: 'Enjoy hassle-free after-sales support directly through our offline brick-and-mortar store or customer hotline.',
-      iconType: 'award'
-    }
-  ];
-
-  const highlights = websiteSettings?.highlightCards?.length ? websiteSettings.highlightCards : defaultHighlights;
+  const highlights = websiteSettings?.highlightCards || [];
 
   const getIconComponent = (type: string) => {
     switch (type) {
@@ -112,121 +91,113 @@ export default function Home() {
           getWebsiteSchema()
         ]}
       />
-      
-      {/* 1. Hero Banner Carousel with reflective shine CTAs */}
-      <section 
-        className="relative h-[380px] sm:h-[440px] md:h-[500px] w-full bg-gray-900 overflow-hidden"
-        onMouseEnter={() => setIsHoveringCarousel(true)}
-        onMouseLeave={() => setIsHoveringCarousel(false)}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="absolute inset-0"
+
+      {/* Flipkart-style Horizontal Scroll Categories Row (Directly below Navbar) */}
+      <style>{`
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-none {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+      <div className="w-full bg-white border-b border-gray-100/90 shadow-sm py-2 px-4 overflow-x-auto scrollbar-none flex items-start justify-start sm:justify-center gap-2 sm:gap-4 md:gap-6">
+        {categories.filter(c => c.enabled).map((cat) => (
+          <Link
+            key={cat.id}
+            to={`/products?category=${cat.id}`}
+            className="flex flex-col items-center flex-shrink-0 w-[74px] sm:w-[96px] text-center group py-1.5 transition-transform duration-200 active:scale-95"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent z-10" />
-            <img
-              src={banners[currentSlide] || null}
-              alt="Promo Banner"
-              className="w-full h-full object-cover"
-            />
-            {/* Banner text overlays */}
-            <div className="absolute inset-0 z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center text-white">
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="max-w-xl"
-              >
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600/90 text-xxs font-sans font-bold uppercase tracking-wider mb-3">
-                  <Sparkles className="h-3.5 w-3.5 animate-spin" />
-                  {currentSlideText.badge}
-                </span>
-                <h1 className="font-sans font-extrabold text-2xl sm:text-4xl md:text-5xl leading-tight tracking-tight">
-                  {currentSlideText.title}
-                </h1>
-                <p className="font-sans text-xs sm:text-base text-gray-200 mt-2 sm:mt-4 leading-relaxed line-clamp-2 sm:line-clamp-none">
-                  {currentSlideText.subtitle}
-                </p>
-                <div className="mt-4 sm:mt-8 flex flex-wrap gap-3">
-                  <Link
-                    to="/products"
-                    className="relative group overflow-hidden px-5 py-2.5 sm:px-7 sm:py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-sans font-bold text-xs sm:text-sm rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-2"
-                  >
-                    {/* Reflective shine effect */}
-                    <span className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
-                      <span className="absolute -inset-y-4 -inset-x-12 w-8 bg-white/20 blur-sm transform rotate-30 animate-[sweep_3s_infinite_ease-in-out]" />
-                    </span>
-                    <span>Explore Products</span>
-                    <Zap className="h-4 w-4 fill-white" />
-                  </Link>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Carousel indicators */}
-        <button 
-          onClick={prevSlide}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-25 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button 
-          onClick={nextSlide}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-25 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </section>
-
-      {/* 2. Featured Categories Row */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-16">
-        <div className="flex justify-between items-baseline mb-6 sm:mb-8">
-          <div>
-            <h2 className="font-sans font-extrabold text-xl sm:text-2xl text-gray-900 tracking-tight">
-              Featured Categories
-            </h2>
-            <p className="font-sans text-xs sm:text-sm text-gray-500 mt-1">
-              Handpicked category selections for your household needs
-            </p>
-          </div>
-          <Link to="/products" className="font-sans text-xs sm:text-sm font-bold text-blue-600 hover:underline">
-            View All
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-          {categories.filter(c => c.enabled).map((cat) => (
-            <Link
-              key={cat.id}
-              to={`/products?category=${cat.id}`}
-              className="group flex flex-col items-center bg-white border border-gray-100 hover:border-blue-100 hover:shadow-lg p-3 sm:p-5 rounded-2xl transition-all duration-300"
-            >
-              <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full overflow-hidden bg-gray-50 border border-gray-100 mb-3 flex items-center justify-center relative">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full overflow-hidden bg-gradient-to-tr from-blue-50 to-indigo-50/50 border border-gray-150/40 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-blue-400 group-hover:shadow-md">
+              {cat.image && !cat.image.includes('unsplash.com') ? (
                 <img
-                  src={cat.image || null}
+                  src={cat.image}
                   alt={cat.name}
-                  className="w-full h-full object-cover transform duration-500 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  referrerPolicy="no-referrer"
                 />
-              </div>
-              <span className="font-sans font-semibold text-xxs sm:text-xs text-gray-700 text-center group-hover:text-blue-600 transition-colors truncate max-w-full">
-                {cat.name}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
+              ) : (
+                <span className="font-sans font-extrabold text-blue-600 text-sm sm:text-base tracking-tight select-none">
+                  {cat.name.slice(0, 2).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <span className="font-sans font-bold text-[10px] sm:text-xs text-gray-600 mt-1.5 group-hover:text-blue-600 transition-colors text-center line-clamp-2 leading-tight px-1">
+              {cat.name}
+            </span>
+          </Link>
+        ))}
+      </div>
+      
+      {/* 1. Hero Banner Carousel - Completely fitted full-bleed image optimized for all devices */}
+      {banners.length > 0 && (
+        <section 
+          className="relative h-[180px] xs:h-[220px] sm:h-[320px] md:h-[420px] lg:h-[500px] w-full bg-gray-100 overflow-hidden shadow-sm"
+          onMouseEnter={() => setIsHoveringCarousel(true)}
+          onMouseLeave={() => setIsHoveringCarousel(false)}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6 }}
+              className="absolute inset-0"
+            >
+              <img
+                src={banners[currentSlide] || null}
+                alt={`Promo Banner ${currentSlide + 1}`}
+                className="w-full h-full object-cover object-center select-none"
+                referrerPolicy="no-referrer"
+              />
+            </motion.div>
+          </AnimatePresence>
 
-      {/* 3. Today's Deals section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-16">
-        <PromoCarousel cards={websiteSettings?.promoCards?.length ? websiteSettings.promoCards : defaultPromoCards} />
-      </section>
+          {/* Elegant Glassmorphic Shop Now Button Floating Overlay */}
+          <div className="absolute inset-0 pointer-events-none z-20 flex items-end justify-start p-4 xs:p-6 sm:p-10 lg:p-16">
+            <Link
+              to="/products"
+              className="pointer-events-auto relative overflow-hidden px-4 py-2 sm:px-6 sm:py-3.5 bg-white/20 hover:bg-white/30 text-white font-sans font-bold text-[10px] sm:text-xs tracking-wider uppercase rounded-full backdrop-blur-md border border-white/25 shadow-lg shadow-black/10 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-1.5 sm:gap-2 group/btn"
+            >
+              {/* Ambient inner soft glowing light */}
+              <span className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+              
+              {/* Sweep light reflecting effect */}
+              <span className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
+                <span className="absolute -inset-y-4 -inset-x-12 w-8 bg-white/20 blur-sm transform rotate-30 animate-[sweep_3s_infinite_ease-in-out]" />
+              </span>
+              
+              <span>Shop Now</span>
+              <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 transform group-hover/btn:translate-x-1 transition-transform duration-300" />
+            </Link>
+          </div>
+
+          {/* Small, elegant dots indicators at the bottom center */}
+          {banners.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 sm:gap-2">
+              {banners.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    currentSlide === index ? 'w-5 bg-white shadow-sm' : 'w-1.5 bg-white/45 hover:bg-white/70'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 2. Today's Deals section */}
+      {websiteSettings?.promoCards?.length ? (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-16">
+          <PromoCarousel cards={websiteSettings.promoCards} />
+        </section>
+      ) : null}
 
       {/* 4. Best Selling Products (Reflective shine cards) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-16">
@@ -419,9 +390,18 @@ function PromoCarousel({ cards }: { cards: any[] }) {
                   </div>
                   <Link
                     to={card.buttonLink || '/products'}
-                    className="self-start md:self-auto px-5 py-2.5 sm:px-6 sm:py-3 bg-white text-gray-900 hover:text-blue-600 font-sans font-extrabold text-xs sm:text-sm rounded-full shadow-md transition-all active:scale-95 whitespace-nowrap shrink-0 mt-1 md:mt-0"
+                    className="relative overflow-hidden px-4 py-2 sm:px-5 sm:py-2.5 bg-white/20 hover:bg-white/35 text-white font-sans font-extrabold text-[10px] sm:text-xs tracking-wider uppercase rounded-full backdrop-blur-md border border-white/25 shadow-md shadow-black/10 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-1.5 sm:gap-2 group/btn self-start md:self-auto shrink-0 mt-2 md:mt-0"
                   >
-                    {card.buttonText || 'Shop Now'}
+                    {/* Ambient inner soft glowing light */}
+                    <span className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                    
+                    {/* Sweep light reflecting effect */}
+                    <span className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
+                      <span className="absolute -inset-y-4 -inset-x-12 w-8 bg-white/20 blur-sm transform rotate-30 animate-[sweep_3s_infinite_ease-in-out]" />
+                    </span>
+
+                    <span>{card.buttonText || 'Shop Now'}</span>
+                    <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 transform group-hover/btn:translate-x-1 transition-transform duration-300" />
                   </Link>
                 </div>
               </motion.div>

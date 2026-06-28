@@ -15,7 +15,6 @@ import {
 } from 'firebase/firestore';
 import { formatINR, formatDate } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import { CarouselText } from '../types';
 
 type AdminTab = 'metrics' | 'products' | 'categories' | 'orders' | 'customers' | 'reviews' | 'settings' | 'queries';
 
@@ -98,7 +97,6 @@ export default function Admin() {
     promoCards: websiteSettings?.promoCards || [] as any[],
     transactionNote: websiteSettings?.transactionNote || '',
     homepageBanners: websiteSettings?.homepageBanners?.join('\n') || '',
-    carouselTexts: websiteSettings?.carouselTexts || [] as CarouselText[],
     storeAddress: websiteSettings?.storeAddress || '',
     storeTimings: websiteSettings?.storeTimings || '',
     salesCallNumber: websiteSettings?.contactNumbers?.[0] || '',
@@ -141,7 +139,6 @@ export default function Admin() {
         promoCards: websiteSettings.promoCards || [] as any[],
         transactionNote: websiteSettings.transactionNote || '',
         homepageBanners: websiteSettings.homepageBanners?.join('\n') || '',
-        carouselTexts: websiteSettings.carouselTexts || [] as CarouselText[],
         storeAddress: websiteSettings.storeAddress || '',
         storeTimings: websiteSettings.storeTimings || '',
         salesCallNumber: websiteSettings.contactNumbers?.[0] || '',
@@ -251,7 +248,7 @@ export default function Admin() {
         features: 'Multi-directional air throw\nSilent heavy copper motor\nCastor wheels',
         specifications: 'Power Consumption: 150W\nAir Delivery: 3200 m3/hr\nWater Tank: 50 Liters',
         warranty: '1 Year Manufacturer Brand Warranty',
-        imageUrl: 'https://images.unsplash.com/photo-1585336139080-b019f04f383e?w=600&auto=format&fit=crop&q=80',
+        imageUrl: '',
         additionalImages: [],
         isFeatured: false,
         isBestSeller: false,
@@ -291,7 +288,7 @@ export default function Admin() {
       features: featuresArr,
       specifications: specsObj,
       warranty: productForm.warranty,
-      images: finalImages.length ? finalImages : ['https://images.unsplash.com/photo-1585336139080-b019f04f383e?w=600&auto=format&fit=crop&q=80'],
+      images: finalImages,
       isFeatured: productForm.isFeatured,
       isBestSeller: productForm.isBestSeller,
       isTrending: productForm.isTrending,
@@ -353,7 +350,7 @@ export default function Admin() {
       setCategoryForm({ name: cat.name, image: cat.image, enabled: cat.enabled });
     } else {
       setEditingCategory(null);
-      setCategoryForm({ name: '', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&auto=format&fit=crop&q=80', enabled: true });
+      setCategoryForm({ name: '', image: '', enabled: true });
     }
     setShowCategoryModal(true);
   };
@@ -484,20 +481,20 @@ export default function Admin() {
   // --- ROBUST UNIVERSAL IMAGE UPLOAD HELPER ---
   const uploadImageOrGetBase64 = async (file: File, path: string): Promise<string> => {
     // Determine compression parameters based on target type
-    let maxW = 800;
-    let maxH = 800;
-    let quality = 0.75;
+    let maxW = 600;
+    let maxH = 600;
+    let quality = 0.6;
 
     if (path === 'settings') {
       // Logos can be quite small
-      maxW = 320;
-      maxH = 320;
-      quality = 0.8;
+      maxW = 240;
+      maxH = 240;
+      quality = 0.65;
     } else if (path === 'banners') {
       // Banners are wider but still don't need to be huge
-      maxW = 1200;
-      maxH = 600;
-      quality = 0.7;
+      maxW = 900;
+      maxH = 450;
+      quality = 0.55;
     }
 
     // 1. Compress the image first
@@ -510,12 +507,12 @@ export default function Admin() {
       console.warn('Image compression failed, using original file:', compressErr);
     }
 
-    // 2. Try Firebase Storage upload first with a generous 15-second timeout
+    // 2. Try Firebase Storage upload first with a fast 1.5-second timeout
     try {
       const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
       const uploadPromise = uploadBytes(storageRef, uploadTarget);
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Firebase Storage upload timed out')), 15000)
+        setTimeout(() => reject(new Error('Firebase Storage upload timed out')), 1500)
       );
 
       const snapshot = await Promise.race([uploadPromise, timeoutPromise]);
@@ -684,7 +681,6 @@ export default function Admin() {
         promoCards: settingsForm.promoCards,
         transactionNote: settingsForm.transactionNote,
         homepageBanners: parsedBanners,
-        carouselTexts: settingsForm.carouselTexts,
         storeAddress: settingsForm.storeAddress.trim(),
         storeTimings: settingsForm.storeTimings.trim(),
         contactNumbers: parsedContactNumbers,
@@ -1095,7 +1091,13 @@ export default function Admin() {
                 {categories.map(cat => (
                   <div key={cat.id} className="border border-gray-100 rounded-2xl p-4 flex items-center justify-between shadow-xs bg-white">
                     <div className="flex items-center gap-3">
-                      <img src={cat.image || null} alt="" className="h-10 w-10 object-cover bg-gray-50 border rounded-full" />
+                      {cat.image && !cat.image.includes('unsplash.com') ? (
+                        <img src={cat.image} alt="" className="h-10 w-10 object-cover bg-gray-50 border rounded-full" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center font-sans font-extrabold text-xs text-blue-600">
+                          {cat.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <h4 className="font-sans font-bold text-sm text-gray-800">{cat.name}</h4>
                         <span className={`text-[10px] font-extrabold uppercase ${cat.enabled ? 'text-emerald-500' : 'text-red-500'}`}>
@@ -1382,15 +1384,6 @@ export default function Admin() {
                           <p className="text-xxs text-gray-400">Directly upload high-quality PNG or SVG logo.</p>
                         </div>
                       </div>
-                      <div className="mt-2">
-                        <input
-                          type="text"
-                          placeholder="Or paste Logo URL here..."
-                          value={settingsForm.logo}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, logo: e.target.value })}
-                          className="w-full p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-mono"
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -1503,15 +1496,9 @@ export default function Admin() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-500 uppercase mb-1.5">Sliding Carousel Banners (URLs on new lines)</label>
-                  <div className="space-y-2">
-                    <textarea
-                      rows={4}
-                      placeholder="https://example.com/banner.jpg"
-                      value={settingsForm.homepageBanners}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, homepageBanners: e.target.value })}
-                      className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-mono"
-                    />
+                  <label className="block font-bold text-gray-500 uppercase mb-1.5">Sliding Carousel Banners</label>
+                  <div className="space-y-4">
+                    {/* File Upload Button */}
                     <div className="flex items-center gap-3 bg-gray-50 p-3 border border-gray-100 rounded-xl">
                       <label htmlFor="banner-file-upload" className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-bold text-xxs rounded-lg cursor-pointer shadow-sm active:scale-95 transition-all inline-flex items-center gap-1">
                         {uploadingBanner ? 'Uploading...' : 'Upload & Append Banner File'}
@@ -1526,108 +1513,53 @@ export default function Admin() {
                       />
                       <p className="text-[10px] text-gray-400">Directly upload banner files to insert them into your sliding carousel!</p>
                     </div>
-                  </div>
-                </div>
 
-                {/* Carousel Slide Texts Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="block font-bold text-gray-500 uppercase">Sliding Carousel Slide Text Overlays</label>
-                    <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full">Configure texts for each slide</span>
-                  </div>
-                  
-                  {(() => {
-                    const parsedBanners = settingsForm.homepageBanners.split('\n').filter(b => b.trim() !== '');
-                    if (parsedBanners.length === 0) {
+                    {/* Banner list with preview and delete buttons */}
+                    {(() => {
+                      const parsedBanners = settingsForm.homepageBanners.split('\n').filter(b => b.trim() !== '');
+                      if (parsedBanners.length === 0) {
+                        return (
+                          <p className="text-xs text-gray-400 italic">No banners uploaded yet. Upload your banner files above.</p>
+                        );
+                      }
                       return (
-                        <p className="text-xs text-gray-400 italic">No banners configured yet. Add banner URLs above to configure slide texts.</p>
-                      );
-                    }
-                    return (
-                      <div className="grid grid-cols-1 gap-4">
-                        {parsedBanners.map((bannerUrl, index) => {
-                          const slideText = settingsForm.carouselTexts[index] || { badge: '', title: '', subtitle: '' };
-                          return (
-                            <div key={index} className="bg-white p-4 border border-gray-100 rounded-xl space-y-3 shadow-sm">
-                              <div className="flex items-center gap-3">
-                                <div className="h-12 w-20 bg-gray-200 border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {parsedBanners.map((bannerUrl, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="h-12 w-20 bg-gray-100 border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                   <img 
                                     src={bannerUrl} 
-                                    alt={`Slide ${index + 1}`} 
+                                    alt={`Banner ${index + 1}`} 
                                     className="w-full h-full object-cover" 
                                     referrerPolicy="no-referrer"
                                     onError={(e) => { 
-                                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1558317374-067fb5f30001?w=200'; 
+                                      (e.target as HTMLImageElement).src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; 
                                     }} 
                                   />
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <span className="inline-block px-1.5 py-0.5 bg-gray-200 text-gray-700 font-bold text-[9px] rounded mb-1">
-                                    Slide #{index + 1}
-                                  </span>
-                                  <p className="text-[10px] text-gray-400 truncate font-mono">{bannerUrl}</p>
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-bold text-gray-750">Slide #{index + 1}</p>
+                                  <p className="text-[9px] text-gray-400 truncate font-mono">{bannerUrl}</p>
                                 </div>
                               </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Badge (e.g. Festival Bonanza Offer)</label>
-                                  <input
-                                    type="text"
-                                    placeholder="Festival Bonanza Offer"
-                                    value={slideText.badge}
-                                    onChange={(e) => {
-                                      const updatedTexts = [...settingsForm.carouselTexts];
-                                      if (!updatedTexts[index]) {
-                                        updatedTexts[index] = { badge: '', title: '', subtitle: '' };
-                                      }
-                                      updatedTexts[index] = { ...updatedTexts[index], badge: e.target.value };
-                                      setSettingsForm({ ...settingsForm, carouselTexts: updatedTexts });
-                                    }}
-                                    className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Heading / Title</label>
-                                  <input
-                                    type="text"
-                                    placeholder="Premium Electronics For Indian Homes"
-                                    value={slideText.title}
-                                    onChange={(e) => {
-                                      const updatedTexts = [...settingsForm.carouselTexts];
-                                      if (!updatedTexts[index]) {
-                                        updatedTexts[index] = { badge: '', title: '', subtitle: '' };
-                                      }
-                                      updatedTexts[index] = { ...updatedTexts[index], title: e.target.value };
-                                      setSettingsForm({ ...settingsForm, carouselTexts: updatedTexts });
-                                    }}
-                                    className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Description / Subtitle</label>
-                                  <textarea
-                                    rows={1}
-                                    placeholder="Get high-quality coolers, ceiling fans..."
-                                    value={slideText.subtitle}
-                                    onChange={(e) => {
-                                      const updatedTexts = [...settingsForm.carouselTexts];
-                                      if (!updatedTexts[index]) {
-                                        updatedTexts[index] = { badge: '', title: '', subtitle: '' };
-                                      }
-                                      updatedTexts[index] = { ...updatedTexts[index], subtitle: e.target.value };
-                                      setSettingsForm({ ...settingsForm, carouselTexts: updatedTexts });
-                                    }}
-                                    className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs"
-                                  />
-                                </div>
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updatedBanners = parsedBanners.filter((_, i) => i !== index);
+                                  setSettingsForm({ ...settingsForm, homepageBanners: updatedBanners.join('\n') });
+                                  showToast('Banner removed successfully!', 'info');
+                                }}
+                                className="text-red-500 hover:text-red-700 font-bold text-xs shrink-0 px-2 py-1 hover:bg-red-50 rounded transition-colors"
+                              >
+                                Remove
+                              </button>
                             </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
 
                 {/* Showroom & Store Details */}
@@ -2172,13 +2104,6 @@ export default function Admin() {
                         </button>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Or paste Product Image URL here..."
-                      value={productForm.imageUrl}
-                      onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                      className="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-mono"
-                    />
                   </div>
                 </div>
               </div>
@@ -2227,25 +2152,6 @@ export default function Admin() {
                         disabled={uploadingAdditional}
                       />
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Or paste image URL and press Enter to add..."
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const val = (e.target as HTMLInputElement).value.trim();
-                          if (val) {
-                            setProductForm({
-                              ...productForm,
-                              additionalImages: [...(productForm.additionalImages || []), val]
-                            });
-                            (e.target as HTMLInputElement).value = '';
-                            showToast('Added additional image url!', 'success');
-                          }
-                        }
-                      }}
-                      className="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-mono"
-                    />
                   </div>
                 </div>
               </div>
@@ -2394,13 +2300,6 @@ export default function Admin() {
                         </button>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Or paste Category Image URL here..."
-                      value={categoryForm.image}
-                      onChange={(e) => setCategoryForm({ ...categoryForm, image: e.target.value })}
-                      className="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-mono"
-                    />
                   </div>
                 </div>
               </div>

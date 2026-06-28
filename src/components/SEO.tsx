@@ -14,7 +14,7 @@ export default function SEO({
   title,
   description,
   keywords,
-  image = 'https://images.unsplash.com/photo-1558317374-067fb5f30001?w=1200&auto=format&fit=crop&q=80',
+  image = '',
   url,
   type = 'website',
   jsonLd

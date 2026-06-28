@@ -89,7 +89,16 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.02)] saturate-150 transition-all duration-300">
+    <header 
+      className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.02)] saturate-150 transition-all duration-500"
+      style={{
+        boxShadow: '0 4px 30px rgba(0,0,0,0.02), 0 8px 30px -4px var(--navbar-reflection, transparent)'
+      }}
+    >
+      {/* Dynamic bottom ambient reflection line reflecting active carousel slide */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-transparent via-[var(--navbar-reflection,transparent)] to-transparent opacity-90 blur-[0.5px] transition-all duration-700 pointer-events-none" 
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
           

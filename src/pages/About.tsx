@@ -31,20 +31,14 @@ export default function About() {
       </div>
 
       {/* Showroom Image or Hero Block */}
-      <div className="relative h-64 sm:h-80 w-full bg-gray-900 rounded-3xl overflow-hidden shadow-md">
-        <img
-          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&auto=format&fit=crop&q=80"
-          alt="Showroom"
-          className="w-full h-full object-cover opacity-60"
-        />
-        <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-white">
-          <div className="max-w-lg space-y-2">
-            <MapPin className="h-8 w-8 mx-auto text-blue-400" />
-            <h3 className="font-sans font-extrabold text-lg sm:text-xl">Our Modinagar Showroom</h3>
-            <p className="font-sans text-xs text-gray-200">
-              Visit our flagship retail brick-and-mortar store to view live product demonstrations and consult our customer care team directly.
-            </p>
-          </div>
+      <div className="relative h-64 sm:h-80 w-full bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 rounded-3xl overflow-hidden shadow-md flex items-center justify-center p-6 text-center text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.15),transparent_50%)]" />
+        <div className="relative z-10 max-w-lg space-y-2">
+          <MapPin className="h-8 w-8 mx-auto text-blue-400" />
+          <h3 className="font-sans font-extrabold text-lg sm:text-xl">Our Modinagar Showroom</h3>
+          <p className="font-sans text-xs text-gray-200">
+            Visit our flagship retail brick-and-mortar store to view live product demonstrations and consult our customer care team directly.
+          </p>
         </div>
       </div>
 

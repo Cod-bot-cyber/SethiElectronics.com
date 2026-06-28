@@ -128,17 +128,10 @@ export interface PromoCard {
   gradientTo: string;
 }
 
-export interface CarouselText {
-  badge: string;
-  title: string;
-  subtitle: string;
-}
-
 export interface WebsiteSettings {
   logo: string;
   name: string;
   homepageBanners: string[];
-  carouselTexts?: CarouselText[];
   offerBanners: string[];
   storeAddress: string;
   storeTimings: string;
