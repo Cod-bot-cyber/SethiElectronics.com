@@ -6,6 +6,7 @@ import ProductCard from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Shimmer';
 import SEO from '../components/SEO';
 import { getBreadcrumbSchema } from '../lib/seoData';
+import { formatINR } from '../lib/utils';
 
 export default function Products() {
   const { products, categories } = useApp();
@@ -15,7 +16,7 @@ export default function Products() {
   // Filter States
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
-  const [maxPrice, setMaxPrice] = useState<number>(10000);
+  const [maxPrice, setMaxPrice] = useState<number>(100000);
   const [minDiscount, setMinDiscount] = useState<number>(0);
   const [onlyInStock, setOnlyInStock] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>('popularity');
@@ -42,11 +43,14 @@ export default function Products() {
   // Extract all brands
   const brandsList = Array.from(new Set(products.map(p => p.brand)));
 
+  // Dynamic maximum range boundary for price filter slider based on products
+  const maxLimit = products.length > 0 ? Math.max(30000, ...products.map(p => p.price)) : 100000;
+
   // Reset all filters
   const resetFilters = () => {
     setSelectedCategory('all');
     setSelectedBrand('all');
-    setMaxPrice(10000);
+    setMaxPrice(100000);
     setMinDiscount(0);
     setOnlyInStock(false);
     setSortBy('popularity');
@@ -178,20 +182,22 @@ export default function Products() {
           <div className="mb-6 border-t border-gray-50 pt-5">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-sans font-bold text-xs text-gray-700 uppercase">Max Price</h4>
-              <span className="font-mono text-xs font-semibold text-blue-600">₹{maxPrice}</span>
+              <span className="font-mono text-xs font-semibold text-blue-600">
+                {maxPrice >= 100000 ? 'Any Price' : `₹${formatINR(maxPrice)}`}
+              </span>
             </div>
             <input
               type="range"
               min="1000"
-              max="20000"
+              max={maxLimit}
               step="500"
-              value={maxPrice}
+              value={maxPrice > maxLimit ? maxLimit : maxPrice}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
               className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xxs font-mono text-gray-400 mt-1">
               <span>₹1,000</span>
-              <span>₹20,000</span>
+              <span>₹{formatINR(maxLimit)}</span>
             </div>
           </div>
 
@@ -401,17 +407,23 @@ export default function Products() {
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="font-sans font-bold text-xs text-gray-700 uppercase">Max Price</h4>
-                    <span className="font-mono text-xs font-semibold text-blue-600">₹{maxPrice}</span>
+                    <span className="font-mono text-xs font-semibold text-blue-600">
+                      {maxPrice >= 100000 ? 'Any Price' : `₹${formatINR(maxPrice)}`}
+                    </span>
                   </div>
                   <input
                     type="range"
                     min="1000"
-                    max="20000"
+                    max={maxLimit}
                     step="500"
-                    value={maxPrice}
+                    value={maxPrice > maxLimit ? maxLimit : maxPrice}
                     onChange={(e) => setMaxPrice(Number(e.target.value))}
                     className="w-full"
                   />
+                  <div className="flex justify-between text-xxs font-mono text-gray-400 mt-1">
+                    <span>₹1,000</span>
+                    <span>₹{formatINR(maxLimit)}</span>
+                  </div>
                 </div>
               </div>
             </div>
