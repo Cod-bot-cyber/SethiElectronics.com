@@ -87,7 +87,7 @@ export default function ProductCard({ product, isFeatured = false }: ProductCard
             alt={product.name}
             loading="lazy"
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover transform duration-700 ease-out group-hover:scale-108"
+            className="w-full h-full object-contain p-3.5 bg-white transform duration-700 ease-out group-hover:scale-105"
           />
 
           {/* Floating Actions on Hover */}

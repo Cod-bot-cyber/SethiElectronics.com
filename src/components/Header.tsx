@@ -177,7 +177,7 @@ export default function Header() {
                       <img
                         src={prod.images?.[0] || null}
                         alt={prod.name}
-                        className="w-10 h-10 object-cover rounded-lg bg-gray-50 border border-gray-100"
+                        className="w-10 h-10 object-contain p-1 rounded-lg bg-white border border-gray-100"
                         referrerPolicy="no-referrer"
                       />
                       <div className="flex-1 min-w-0">
