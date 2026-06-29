@@ -28,10 +28,33 @@ export interface FirestoreErrorInfo {
   }
 }
 
+export function isQuotaError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return (
+    msg.includes('Quota exceeded') ||
+    msg.includes('Quota limit exceeded') ||
+    msg.includes('quota') ||
+    msg.includes('Quota') ||
+    msg.includes('QUOTA')
+  );
+}
+
+export function isPermissionError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return (
+    msg.includes('permission') ||
+    msg.includes('Permission') ||
+    msg.includes('PERMISSION') ||
+    msg.includes('insufficient permissions')
+  );
+}
+
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
   const currentUserId = localStorage.getItem('sethi_session_userId');
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errorMsg,
     authInfo: {
       userId: currentUserId,
       email: currentUserId ? `${currentUserId}@sethielectronics.com` : null,
@@ -41,6 +64,17 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
+
+  if (isQuotaError(error)) {
+    console.warn('Firestore Quota Alert (Handled gracefully): ', JSON.stringify(errInfo));
+    throw new Error(`QUOTA_EXCEEDED: ${errorMsg}`);
+  }
+
+  if (isPermissionError(error)) {
+    console.warn('Firestore Permission Alert (Handled gracefully): ', JSON.stringify(errInfo));
+    throw new Error(`PERMISSION_DENIED: ${errorMsg}`);
+  }
+
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }

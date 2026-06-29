@@ -1091,7 +1091,7 @@ export default function Admin() {
                 {categories.map(cat => (
                   <div key={cat.id} className="border border-gray-100 rounded-2xl p-4 flex items-center justify-between shadow-xs bg-white">
                     <div className="flex items-center gap-3">
-                      {cat.image && !cat.image.includes('unsplash.com') ? (
+                      {cat.image ? (
                         <img src={cat.image} alt="" className="h-10 w-10 object-cover bg-gray-50 border rounded-full" />
                       ) : (
                         <div className="h-10 w-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center font-sans font-extrabold text-xs text-blue-600">

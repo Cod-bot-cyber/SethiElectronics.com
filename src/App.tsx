@@ -31,24 +31,6 @@ export default function App() {
 }
 
 function AppContent() {
-  const { websiteSettings } = useApp();
-
-  if (!websiteSettings) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
-        <div className="relative flex items-center justify-center">
-          <div className="h-14 w-14 rounded-full border-4 border-blue-500/10 border-t-blue-600 animate-spin" />
-          <div className="absolute font-sans font-black text-xs text-blue-600">
-            SE
-          </div>
-        </div>
-        <p className="mt-4 text-xs font-sans font-extrabold text-gray-400 uppercase tracking-widest animate-pulse">
-          Loading Sethi Electronics...
-        </p>
-      </div>
-    );
-  }
-
   return (
     <BrowserRouter>
       <ScrollToTop />

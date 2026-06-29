@@ -103,35 +103,44 @@ export default function Home() {
         }
       `}</style>
       <div className="w-full bg-white border-b border-gray-100/90 shadow-sm py-2 px-4 overflow-x-auto scrollbar-none flex items-start justify-start sm:justify-center gap-2 sm:gap-4 md:gap-6">
-        {categories.filter(c => c.enabled).map((cat) => (
-          <Link
-            key={cat.id}
-            to={`/products?category=${cat.id}`}
-            className="flex flex-col items-center flex-shrink-0 w-[74px] sm:w-[96px] text-center group py-1.5 transition-transform duration-200 active:scale-95"
-          >
-            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full overflow-hidden bg-gradient-to-tr from-blue-50 to-indigo-50/50 border border-gray-150/40 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-blue-400 group-hover:shadow-md">
-              {cat.image && !cat.image.includes('unsplash.com') ? (
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <span className="font-sans font-extrabold text-blue-600 text-sm sm:text-base tracking-tight select-none">
-                  {cat.name.slice(0, 2).toUpperCase()}
-                </span>
-              )}
+        {categories.length === 0 ? (
+          [...Array(6)].map((_, idx) => (
+            <div key={idx} className="flex flex-col items-center flex-shrink-0 w-[74px] sm:w-[96px] py-1.5 space-y-2">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-gray-100 animate-pulse border border-gray-100" />
+              <div className="h-3 w-12 bg-gray-100 rounded-md animate-pulse" />
             </div>
-            <span className="font-sans font-bold text-[10px] sm:text-xs text-gray-600 mt-1.5 group-hover:text-blue-600 transition-colors text-center line-clamp-2 leading-tight px-1">
-              {cat.name}
-            </span>
-          </Link>
-        ))}
+          ))
+        ) : (
+          categories.filter(c => c.enabled).map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/products?category=${cat.id}`}
+              className="flex flex-col items-center flex-shrink-0 w-[74px] sm:w-[96px] text-center group py-1.5 transition-transform duration-200 active:scale-95"
+            >
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full overflow-hidden bg-gradient-to-tr from-blue-50 to-indigo-50/50 border border-gray-150/40 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-blue-400 group-hover:shadow-md">
+                {cat.image ? (
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="font-sans font-extrabold text-blue-600 text-sm sm:text-base tracking-tight select-none">
+                    {cat.name.slice(0, 2).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <span className="font-sans font-bold text-[10px] sm:text-xs text-gray-600 mt-1.5 group-hover:text-blue-600 transition-colors text-center line-clamp-2 leading-tight px-1">
+                {cat.name}
+              </span>
+            </Link>
+          ))
+        )}
       </div>
       
       {/* 1. Hero Banner Carousel - Completely fitted full-bleed image optimized for all devices */}
-      {banners.length > 0 && (
+      {banners.length > 0 ? (
         <section 
           className="relative h-[180px] xs:h-[220px] sm:h-[320px] md:h-[420px] lg:h-[500px] w-full bg-gray-100 overflow-hidden shadow-sm"
           onMouseEnter={() => setIsHoveringCarousel(true)}
@@ -189,6 +198,15 @@ export default function Home() {
               ))}
             </div>
           )}
+        </section>
+      ) : (
+        <section className="relative h-[180px] xs:h-[220px] sm:h-[320px] md:h-[420px] lg:h-[500px] w-full bg-gray-150 overflow-hidden shadow-sm">
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+            <div className="text-center">
+              <div className="h-8 w-8 rounded-full border-2 border-blue-500/20 border-t-blue-500 animate-spin mx-auto mb-2.5" />
+              <span className="font-sans text-xxs font-extrabold text-gray-400 uppercase tracking-widest">Sethi Electronics</span>
+            </div>
+          </div>
         </section>
       )}
 

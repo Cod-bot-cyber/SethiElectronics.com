@@ -2,7 +2,7 @@ import { collection, doc, getDocs, setDoc, writeBatch } from 'firebase/firestore
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { hashPassword } from './utils';
 
-const SEED_CATEGORIES = [
+export const SEED_CATEGORIES = [
   { id: 'kitchen-appliances', name: 'Kitchen Appliances', image: '', displayOrder: 1, enabled: true },
   { id: 'fans', name: 'Fans', image: '', displayOrder: 2, enabled: true },
   { id: 'coolers', name: 'Coolers', image: '', displayOrder: 3, enabled: true },
@@ -16,7 +16,7 @@ const SEED_CATEGORIES = [
   { id: 'home-appliances', name: 'Home Appliances', image: '', displayOrder: 11, enabled: true }
 ];
 
-const SEED_PRODUCTS = [
+export const SEED_PRODUCTS = [
   {
     id: 'bajaj-platini-px97-cooler',
     name: 'Bajaj Platini PX97 Torque 36L Personal Air Cooler',
@@ -219,6 +219,40 @@ const SEED_PRODUCTS = [
     isOutOfStock: false,
     rating: 4.1,
     reviewsCount: 19,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'whirlpool-265l-double-door-fridge',
+    name: 'Whirlpool 265L 3 Star Inverter Frost-Free Double Door Refrigerator',
+    brand: 'Whirlpool',
+    category: 'home-appliances',
+    price: 24990,
+    originalPrice: 32000,
+    discount: 22,
+    description: 'Whirlpool NeoFresh Double Door Refrigerator features 6th Sense DeepFreeze Technology and chilling gel that retains cooling during power cuts.',
+    specifications: {
+      'Capacity': '265 Litres',
+      'Energy Rating': '3 Star',
+      'Defrost System': 'Frost Free',
+      'Compressor': 'IntelliSense Inverter Compressor',
+      'Stabilizer Required': 'No (130V - 300V)'
+    },
+    features: [
+      '6th Sense DeepFreeze Technology for deeper cooling',
+      'MicroBlock Technology prevents 99% bacterial growth',
+      'Active Deo keeps refrigerator environment fresh and odor-free',
+      'Chilling gel retains cooling during power cuts up to 12 hours',
+      'Freshflow Air Tower with flexi vents'
+    ],
+    warranty: '1 Year on Product, 10 Years on Compressor',
+    stock: 8,
+    images: ['https://images.unsplash.com/photo-1571175432267-efb929ca8c8a?w=800&auto=format&fit=crop&q=80'],
+    isFeatured: true,
+    isTrending: true,
+    isBestSeller: true,
+    isOutOfStock: false,
+    rating: 4.6,
+    reviewsCount: 35,
     createdAt: new Date().toISOString()
   }
 ];

@@ -1,10 +1,11 @@
+
+
 {
-  "projectId": "concentrated-bongo-d5xj8",
-  "appId": "1:198604412366:web:da46a99f22eb60c5c5479f",
-  "apiKey": "AIzaSyCQsqgjUBYjCpHibAjDHVRvoEisE8FxqSI",
-  "authDomain": "concentrated-bongo-d5xj8.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-0d253306-07e4-4aca-9eb1-3005c97caee8",
-  "storageBucket": "concentrated-bongo-d5xj8.firebasestorage.app",
-  "messagingSenderId": "198604412366",
-  "measurementId": ""
+  "apiKey": "AIzaSyCqmGltaPXhIEvKA2cznJDgAvCiF-wsiKk",
+  "authDomain": "sethielectronicsonline.firebaseapp.com",
+  "projectId": "sethielectronicsonline",
+ "storageBucket": "sethielectronicsonline.firebasestorage.app",
+  "messagingSenderId": "936430937551",
+  "appId": "1:936430937551:web:b42862528a866ec34b5eba",
+  "measurementId": "G-LVK0XJP0MM"
 }

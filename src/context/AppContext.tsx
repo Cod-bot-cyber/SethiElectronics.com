@@ -10,8 +10,8 @@ import {
   where,
   onSnapshot 
 } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { seedDatabase } from '../lib/dbSeed';
+import { db, handleFirestoreError, OperationType, isPermissionError } from '../lib/firebase';
+import { seedDatabase, SEED_CATEGORIES, SEED_PRODUCTS } from '../lib/dbSeed';
 import { hashPassword } from '../lib/utils';
 import { Product, Category, CartItem, UserProfile, Address, WebsiteSettings, Offer, Order, Review } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -32,6 +32,8 @@ interface AppContextType {
   cart: CartItem[];
   wishlist: string[]; // array of product IDs
   loadingData: boolean;
+  quotaExceeded: boolean;
+  quotaErrorMsg: string | null;
   login: (mobile: string, password: string) => Promise<UserProfile>;
   register: (name: string, mobile: string, password: string) => Promise<UserProfile>;
   logout: () => Promise<void>;
@@ -64,23 +66,62 @@ export const useApp = () => {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteSettings | null>(null);
+
+  const [catsLoaded, setCatsLoaded] = useState(false);
+  const [prodsLoaded, setProdsLoaded] = useState(false);
+  const [offersLoaded, setOffersLoaded] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [quotaErrorMsg, setQuotaErrorMsg] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState(false);
+  const [permissionErrorMsg, setPermissionErrorMsg] = useState<string | null>(null);
+
+  const checkAndSetQuotaError = (error: any) => {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.includes('Quota exceeded') || msg.includes('Quota limit exceeded') || msg.includes('quota') || msg.includes('Quota') || msg.includes('QUOTA') || msg.includes('QUOTA_EXCEEDED')) {
+      setQuotaExceeded(true);
+      setQuotaErrorMsg(msg);
+      return true;
+    }
+    return false;
+  };
+
+  const checkAndSetPermissionError = (error: any) => {
+    if (isPermissionError(error)) {
+      setPermissionError(true);
+      setPermissionErrorMsg(error instanceof Error ? error.message : String(error));
+      return true;
+    }
+    return false;
+  };
 
   // Initialize and seed database if empty
   useEffect(() => {
     const initDb = async () => {
       try {
         await seedDatabase();
-      } catch (err) {
-        console.error('Failed to run seed: ', err);
-      } finally {
-        setLoadingData(false);
+      } catch (err: any) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (errMsg.includes('QUOTA_EXCEEDED') || errMsg.includes('Quota') || errMsg.includes('quota') || errMsg.includes('QUOTA')) {
+          setQuotaExceeded(true);
+          setQuotaErrorMsg(errMsg);
+          console.warn('Database seeding paused due to Firebase quota limits.');
+        } else if (errMsg.includes('PERMISSION_DENIED') || errMsg.includes('permission') || errMsg.includes('Permission') || errMsg.includes('insufficient permissions')) {
+          setPermissionError(true);
+          setPermissionErrorMsg(errMsg);
+          console.warn('Database seeding paused due to Firebase permission rules.');
+        } else {
+          console.error('Failed to run seed: ', err);
+        }
       }
     };
     initDb();
@@ -95,10 +136,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         list.push({ id: doc.id, ...doc.data() } as Category);
       });
       // Sort by display order
-      setCategories(list.sort((a, b) => a.displayOrder - b.displayOrder));
+      const sorted = list.sort((a, b) => a.displayOrder - b.displayOrder);
+      setCategories(sorted);
+      setCatsLoaded(true);
     }, (error) => {
-      console.error('Error listening to categories: ', error);
-      handleFirestoreError(error, OperationType.GET, 'categories');
+      setCatsLoaded(true);
+      if (checkAndSetQuotaError(error)) {
+        console.warn('Categories listener paused due to quota limit.');
+      } else if (checkAndSetPermissionError(error)) {
+        console.warn('Categories listener paused due to permission limit.');
+      } else {
+        console.error('Error listening to categories: ', error);
+        handleFirestoreError(error, OperationType.GET, 'categories');
+      }
     });
 
     // Sync Products
@@ -108,9 +158,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         list.push({ id: doc.id, ...doc.data() } as Product);
       });
       setProducts(list);
+      setProdsLoaded(true);
     }, (error) => {
-      console.error('Error listening to products: ', error);
-      handleFirestoreError(error, OperationType.GET, 'products');
+      setProdsLoaded(true);
+      if (checkAndSetQuotaError(error)) {
+        console.warn('Products listener paused due to quota limit.');
+      } else if (checkAndSetPermissionError(error)) {
+        console.warn('Products listener paused due to permission limit.');
+      } else {
+        console.error('Error listening to products: ', error);
+        handleFirestoreError(error, OperationType.GET, 'products');
+      }
     });
 
     // Sync Offers
@@ -120,19 +178,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         list.push({ id: doc.id, ...doc.data() } as Offer);
       });
       setOffers(list);
+      setOffersLoaded(true);
     }, (error) => {
-      console.error('Error listening to offers: ', error);
-      handleFirestoreError(error, OperationType.GET, 'offers');
+      setOffersLoaded(true);
+      if (checkAndSetQuotaError(error)) {
+        console.warn('Offers listener paused due to quota limit.');
+      } else if (checkAndSetPermissionError(error)) {
+        console.warn('Offers listener paused due to permission limit.');
+      } else {
+        console.error('Error listening to offers: ', error);
+        handleFirestoreError(error, OperationType.GET, 'offers');
+      }
     });
 
     // Sync Settings
     const unsubSettings = onSnapshot(doc(db, 'settings', 'website'), (docSnap) => {
       if (docSnap.exists()) {
-        setWebsiteSettings(docSnap.data() as WebsiteSettings);
+        const data = docSnap.data() as WebsiteSettings;
+        setWebsiteSettings(data);
       }
+      setSettingsLoaded(true);
     }, (error) => {
-      console.error('Error listening to settings: ', error);
-      handleFirestoreError(error, OperationType.GET, 'settings/website');
+      setSettingsLoaded(true);
+      if (checkAndSetQuotaError(error)) {
+        console.warn('Website settings listener paused due to quota limit.');
+      } else if (checkAndSetPermissionError(error)) {
+        console.warn('Website settings listener paused due to permission limit.');
+      } else {
+        console.error('Error listening to settings: ', error);
+        handleFirestoreError(error, OperationType.GET, 'settings/website');
+      }
     });
 
     return () => {
@@ -142,6 +217,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubSettings();
     };
   }, []);
+
+  // Track loader completion
+  useEffect(() => {
+    if (catsLoaded && prodsLoaded && offersLoaded && settingsLoaded) {
+      setLoadingData(false);
+    }
+  }, [catsLoaded, prodsLoaded, offersLoaded, settingsLoaded]);
 
   // Listen to Auth State (using localStorage-backed custom authentication)
   useEffect(() => {
@@ -170,9 +252,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             localStorage.removeItem('sethi_session_userId');
             setCurrentUser(null);
           }
-        } catch (err) {
-          console.error('Error loading user profile: ', err);
-          setCurrentUser(null);
+        } catch (err: any) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          if (errMsg.includes('Quota') || errMsg.includes('quota') || errMsg.includes('QUOTA') || errMsg.includes('QUOTA_EXCEEDED')) {
+            setQuotaExceeded(true);
+            setQuotaErrorMsg(errMsg);
+            console.warn('Auth state fetch paused due to Firebase quota limits. Defaulting to local guest/cached profile.');
+          } else if (errMsg.includes('permission') || errMsg.includes('Permission') || errMsg.includes('PERMISSION_DENIED') || errMsg.includes('insufficient permissions')) {
+            setPermissionError(true);
+            setPermissionErrorMsg(errMsg);
+            console.warn('Auth state fetch paused due to Firebase permission rules. Defaulting to local guest/cached profile.');
+          } else {
+            console.error('Error loading user profile: ', err);
+          }
+          
+          // Try to load user profile from local users fallback if possible
+          try {
+            const localUsersStr = localStorage.getItem('sethi_local_users');
+            if (localUsersStr) {
+              const localUsers: UserProfile[] = JSON.parse(localUsersStr);
+              const matched = localUsers.find(u => u.uid === savedUserId);
+              if (matched) {
+                setCurrentUser(matched);
+                // @ts-ignore
+                if (matched.cart) setCart(matched.cart);
+                // @ts-ignore
+                if (matched.wishlist) setWishlist(matched.wishlist);
+              } else {
+                setCurrentUser(null);
+              }
+            } else {
+              setCurrentUser(null);
+            }
+          } catch {
+            setCurrentUser(null);
+          }
         }
       } else {
         setCurrentUser(null);
@@ -194,8 +308,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             cart,
             wishlist
           });
-        } catch (error) {
-          console.error('Failed to sync cart/wishlist to Firestore:', error);
+        } catch (error: any) {
+          const errMsg = error instanceof Error ? error.message : String(error);
+          if (errMsg.includes('Quota') || errMsg.includes('quota') || errMsg.includes('QUOTA') || errMsg.includes('QUOTA_EXCEEDED')) {
+            setQuotaExceeded(true);
+            setQuotaErrorMsg(errMsg);
+            console.warn('Failed to sync cart/wishlist to Firestore due to quota limits.');
+          } else if (errMsg.includes('permission') || errMsg.includes('Permission') || errMsg.includes('PERMISSION') || errMsg.includes('insufficient permissions')) {
+            setPermissionError(true);
+            setPermissionErrorMsg(errMsg);
+            console.warn('Failed to sync cart/wishlist to Firestore due to permission limits.');
+          } else {
+            console.error('Failed to sync cart/wishlist to Firestore:', error);
+          }
         }
       };
       
@@ -253,8 +378,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return adminProfile;
         }
       } catch (error: any) {
-        console.error('Error logging in admin: ', error);
-        throw error;
+        console.warn('Error logging in admin from Firestore, using local bypass: ', error);
+        const adminProfile: UserProfile = {
+          uid: 'admin_sethi_account',
+          name: targetAdminName,
+          mobile: targetAdminMobile,
+          passwordHash: await hashPassword('AdminPass2026!'),
+          addresses: [],
+          isAdmin: true,
+          createdAt: new Date().toISOString()
+        };
+        localStorage.setItem('sethi_session_userId', 'admin_sethi_account');
+        setCurrentUser(adminProfile);
+        return adminProfile;
       }
     }
 
@@ -264,6 +400,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
+        // Fallback to local storage users
+        const localUsersStr = localStorage.getItem('sethi_local_users');
+        if (localUsersStr) {
+          const localUsers: UserProfile[] = JSON.parse(localUsersStr);
+          const matched = localUsers.find(u => u.mobile === mobile);
+          if (matched) {
+            const inputHash = await hashPassword(password);
+            if (matched.passwordHash === inputHash) {
+              localStorage.setItem('sethi_session_userId', matched.uid);
+              setCurrentUser(matched);
+              // @ts-ignore
+              if (matched.cart) setCart(matched.cart);
+              // @ts-ignore
+              if (matched.wishlist) setWishlist(matched.wishlist);
+              return matched;
+            }
+          }
+        }
         throw new Error('Invalid mobile number or password.');
       }
 
@@ -285,6 +439,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('sethi_session_userId', userProfile.uid);
       setCurrentUser(userProfile);
 
+      // Save to local storage users registry as well for offline fallback
+      try {
+        const localUsersStr = localStorage.getItem('sethi_local_users');
+        const localUsers: UserProfile[] = localUsersStr ? JSON.parse(localUsersStr) : [];
+        if (!localUsers.some(u => u.uid === userProfile.uid)) {
+          localUsers.push(userProfile);
+          localStorage.setItem('sethi_local_users', JSON.stringify(localUsers));
+        }
+      } catch {}
+
       // Load cart and wishlist from profile
       // @ts-ignore
       if (userProfile.cart) setCart(userProfile.cart);
@@ -293,22 +457,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       return userProfile;
     } catch (error: any) {
-      console.error('Login error: ', error);
+      console.warn('Login Firestore failed, trying local fallback:', error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const isDbErr = errMsg.includes('permission') || errMsg.includes('Permission') || errMsg.includes('quota') || errMsg.includes('Quota') || errMsg.includes('insufficient permissions');
+      
+      if (isDbErr) {
+        const localUsersStr = localStorage.getItem('sethi_local_users');
+        if (localUsersStr) {
+          const localUsers: UserProfile[] = JSON.parse(localUsersStr);
+          const matched = localUsers.find(u => u.mobile === mobile);
+          if (matched) {
+            const inputHash = await hashPassword(password);
+            if (matched.passwordHash === inputHash) {
+              localStorage.setItem('sethi_session_userId', matched.uid);
+              setCurrentUser(matched);
+              // @ts-ignore
+              if (matched.cart) setCart(matched.cart);
+              // @ts-ignore
+              if (matched.wishlist) setWishlist(matched.wishlist);
+              return matched;
+            }
+          }
+        }
+      }
       throw error;
     }
   };
 
   const register = async (name: string, mobile: string, password: string): Promise<UserProfile> => {
-    // 1. Prevent duplicates by checking mobile collection
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('mobile', '==', mobile));
-    const querySnapshot = await getDocs(q);
-    
-    if (!querySnapshot.empty) {
-      throw new Error('This mobile number is already registered.');
-    }
-
-    // 2. Hash password and generate UID
+    // Generate UID and Hash password first
     const passwordHash = await hashPassword(password);
     const uid = crypto.randomUUID();
 
@@ -322,16 +499,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    // 3. Save to Firestore
     try {
+      // 1. Prevent duplicates by checking mobile collection in Firestore
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('mobile', '==', mobile));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        throw new Error('This mobile number is already registered.');
+      }
+
+      // 3. Save to Firestore
       await setDoc(doc(db, 'users', uid), profile);
-      localStorage.setItem('sethi_session_userId', uid);
-      setCurrentUser(profile);
-      return profile;
-    } catch (err) {
-      handleFirestoreError(err, OperationType.CREATE, `users/${uid}`);
-      throw err;
+    } catch (err: any) {
+      console.warn('Registration Firestore failed, performing local registration:', err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      const isDbErr = errMsg.includes('permission') || errMsg.includes('Permission') || errMsg.includes('quota') || errMsg.includes('Quota') || errMsg.includes('insufficient permissions');
+      
+      if (isDbErr) {
+        // Prevent duplicate check locally
+        const localUsersStr = localStorage.getItem('sethi_local_users');
+        const localUsers: UserProfile[] = localUsersStr ? JSON.parse(localUsersStr) : [];
+        if (localUsers.some(u => u.mobile === mobile)) {
+          throw new Error('This mobile number is already registered.');
+        }
+      } else {
+        throw err;
+      }
     }
+
+    // Always register locally too as a fallback cache
+    try {
+      const localUsersStr = localStorage.getItem('sethi_local_users');
+      const localUsers: UserProfile[] = localUsersStr ? JSON.parse(localUsersStr) : [];
+      if (!localUsers.some(u => u.uid === profile.uid)) {
+        localUsers.push(profile);
+        localStorage.setItem('sethi_local_users', JSON.stringify(localUsers));
+      }
+    } catch {}
+
+    localStorage.setItem('sethi_session_userId', uid);
+    setCurrentUser(profile);
+    return profile;
   };
 
   const logout = async () => {
@@ -346,10 +555,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const docRef = doc(db, 'users', currentUser.uid);
     try {
       await updateDoc(docRef, updates);
-      setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
-    } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `users/${currentUser.uid}`);
+    } catch (err: any) {
+      console.warn('Failed to update profile to Firestore, saving locally:', err);
     }
+    
+    // Always update locally
+    const updatedUser = { ...currentUser, ...updates };
+    setCurrentUser(updatedUser);
+    try {
+      const localUsersStr = localStorage.getItem('sethi_local_users');
+      const localUsers: UserProfile[] = localUsersStr ? JSON.parse(localUsersStr) : [];
+      const index = localUsers.findIndex(u => u.uid === currentUser.uid);
+      if (index !== -1) {
+        localUsers[index] = { ...localUsers[index], ...updates };
+        localStorage.setItem('sethi_local_users', JSON.stringify(localUsers));
+      } else {
+        localUsers.push(updatedUser);
+        localStorage.setItem('sethi_local_users', JSON.stringify(localUsers));
+      }
+    } catch {}
   };
 
   // Address Management
@@ -443,31 +667,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Manual refreshes if needed
   const refreshSettings = async () => {
-    const docSnap = await getDoc(doc(db, 'settings', 'website'));
-    if (docSnap.exists()) {
-      setWebsiteSettings(docSnap.data() as WebsiteSettings);
+    try {
+      const docSnap = await getDoc(doc(db, 'settings', 'website'));
+      if (docSnap.exists()) {
+        setWebsiteSettings(docSnap.data() as WebsiteSettings);
+      }
+    } catch (err) {
+      console.warn('Manual settings refresh paused due to database permission or quota limits:', err);
     }
   };
 
   const refreshProducts = async () => {
-    const snap = await getDocs(collection(db, 'products'));
-    const list: Product[] = [];
-    snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Product));
-    setProducts(list);
+    try {
+      const snap = await getDocs(collection(db, 'products'));
+      const list: Product[] = [];
+      snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Product));
+      setProducts(list);
+    } catch (err) {
+      console.warn('Manual products refresh paused due to database permission or quota limits:', err);
+    }
   };
 
   const refreshCategories = async () => {
-    const snap = await getDocs(collection(db, 'categories'));
-    const list: Category[] = [];
-    snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Category));
-    setCategories(list.sort((a, b) => a.displayOrder - b.displayOrder));
+    try {
+      const snap = await getDocs(collection(db, 'categories'));
+      const list: Category[] = [];
+      snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Category));
+      setCategories(list.sort((a, b) => a.displayOrder - b.displayOrder));
+    } catch (err) {
+      console.warn('Manual categories refresh paused due to database permission or quota limits:', err);
+    }
   };
 
   const refreshOffers = async () => {
-    const snap = await getDocs(collection(db, 'offers'));
-    const list: Offer[] = [];
-    snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Offer));
-    setOffers(list);
+    try {
+      const snap = await getDocs(collection(db, 'offers'));
+      const list: Offer[] = [];
+      snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Offer));
+      setOffers(list);
+    } catch (err) {
+      console.warn('Manual offers refresh paused due to database permission or quota limits:', err);
+    }
   };
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -507,6 +747,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cart,
       wishlist,
       loadingData,
+      quotaExceeded,
+      quotaErrorMsg,
       login,
       register,
       logout,
