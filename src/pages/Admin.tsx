@@ -481,20 +481,30 @@ export default function Admin() {
   // --- ROBUST UNIVERSAL IMAGE UPLOAD HELPER ---
   const uploadImageOrGetBase64 = async (file: File, path: string): Promise<string> => {
     // Determine compression parameters based on target type
-    let maxW = 600;
-    let maxH = 600;
-    let quality = 0.6;
+    let maxW = 1200;
+    let maxH = 1200;
+    let quality = 0.85;
 
     if (path === 'settings') {
-      // Logos can be quite small
-      maxW = 240;
-      maxH = 240;
-      quality = 0.65;
+      // Logos can be quite small but need high crispness
+      maxW = 400;
+      maxH = 400;
+      quality = 0.9;
     } else if (path === 'banners') {
-      // Banners are wider but still don't need to be huge
-      maxW = 900;
-      maxH = 450;
-      quality = 0.55;
+      // Banners are wide hero slide images, optimized for laptop & phone screens
+      maxW = 1920;
+      maxH = 1080;
+      quality = 0.85;
+    } else if (path === 'categories') {
+      // Categories can be 500x500 for crisp thumbnail displays
+      maxW = 500;
+      maxH = 500;
+      quality = 0.85;
+    } else if (path === 'qrcodes') {
+      // UPI QR Code needs to be extremely clear for scanning
+      maxW = 800;
+      maxH = 800;
+      quality = 0.95;
     }
 
     // 1. Compress the image first
