@@ -1171,6 +1171,51 @@ export default function Admin() {
                       </div>
                     </div>
 
+                    {/* Ordered Items List - Highly Optimized for Mobile & Laptop */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <h4 className="text-xs font-bold text-gray-700 mb-2.5 font-sans flex items-center gap-1.5">
+                        <ShoppingBag className="h-4 w-4 text-gray-400" />
+                        <span>Ordered Items ({ord.items?.length || 0})</span>
+                      </h4>
+                      <div className="grid grid-cols-1 gap-2.5">
+                        {ord.items && ord.items.length > 0 ? (
+                          ord.items.map((item: any, idx: number) => (
+                            <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gray-50/40 rounded-xl border border-gray-100/70 hover:border-gray-200 hover:bg-gray-50 transition-all duration-200">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="h-12 w-12 rounded-lg border border-gray-200 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-xxs">
+                                  {item.image ? (
+                                    <img src={item.image} alt={item.name} className="h-10 w-10 object-contain" />
+                                  ) : (
+                                    <ShoppingBag className="h-6 w-6 text-gray-300" />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-sans font-bold text-xs text-gray-800 truncate">{item.name}</p>
+                                  <p className="font-sans text-[10px] text-gray-400 mt-0.5">
+                                    Product ID: <span className="font-mono font-medium text-gray-500">{item.productId}</span>
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex sm:items-center justify-between sm:justify-end gap-6 border-t sm:border-t-0 border-gray-100 pt-2 sm:pt-0">
+                                <div className="font-sans text-xs text-gray-500">
+                                  <span className="font-mono font-semibold text-gray-700">{formatINR(item.price)}</span>
+                                  <span className="text-gray-400 mx-1.5">&times;</span>
+                                  <span className="font-mono font-extrabold text-gray-700">{item.quantity}</span>
+                                </div>
+                                <div className="text-right font-mono font-bold text-xs text-gray-800">
+                                  {formatINR(item.price * item.quantity)}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-xs font-sans text-amber-600 bg-amber-50/50 p-3 rounded-xl border border-dashed border-amber-200">
+                            No item records associated with this order.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     {/* Operational action button controls for order lifecycle */}
                     <div className="flex flex-wrap gap-2.5 pt-1.5 font-sans text-xs font-bold">
                       {ord.status === 'pending_verification' && (
